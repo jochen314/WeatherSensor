@@ -1,6 +1,7 @@
 #include "Sensor.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <string.h>
 #include <math.h>
 
@@ -47,6 +48,22 @@ Sensor::Sensor(int dataPin) {
 
 	id(rand() % 256).batteryOK(true).alarm(false).channel(0).temperature(0).humidity(50);
 }
+
+std::string Sensor::getStatusJson() {
+	std::ostringstream status;
+
+	status << "{"
+			<< "\"channel\" = " << (int)channel() <<","
+			<< "\"id\" = " << (int)id() <<","
+			<< "\"alarm\" = \"" << (alarm() ? "on": "off") << "\","
+			<< "\"battery\" = " << (batteryOK() ? "ok": "bad") <<"\","
+			<< "\"temperature\" = " << temperature() <<","
+			<< "\"humidity\" = " << humidity()
+			<< "}";
+
+	return status.str();
+}
+
 
 Sensor& Sensor::id(uint8_t id) {
 	setBits(_message, id, 8);

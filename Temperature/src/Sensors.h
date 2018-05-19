@@ -10,6 +10,7 @@
 
 #include "Command.h"
 #include "Sensor.hpp"
+#include "MQTTClient.h"
 
 class Sensors {
 public:
@@ -41,6 +42,8 @@ private:
 	void enableAlarm();
 
 	pthread_mutex_t mutex;
+
+	MQTTClient* client;
 };
 
 

@@ -2,6 +2,7 @@
 #define _Sensor_h
 
 #include <stdint.h>
+#include <string>
 #include <wiringPi.h>
 
 class Sensor{
@@ -26,6 +27,8 @@ class Sensor{
 
 	const char* message() const;
 	Sensor& message(const char* message);
+
+	std::string getStatusJson();
 
   private:
     int _dataPin;

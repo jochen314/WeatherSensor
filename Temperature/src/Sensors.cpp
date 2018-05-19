@@ -13,6 +13,7 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -54,7 +55,11 @@ int Sensors::startDaemon() {
 	MQTTClient mqttClient ("weather_sender");
 	mqttClient.start();
 
+	this->client = &mqttClient;
+
 	Controller::instance().serverLoop();
+
+	this->client = NULL;
 
 	mqttClient.stop();
 
@@ -114,6 +119,10 @@ void Sensors::alarm() {
 		if (sensors[channel] != NULL) {
 //			cout << sensors[channel]->message() << endl;
 			sensors[channel]->send();
+
+			if (this->client != NULL) {
+				this->client->sendStatus(channel, "status", sensors[channel]->getStatusJson());
+			}
 		}
 	}
 }
