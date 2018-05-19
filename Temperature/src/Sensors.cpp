@@ -19,7 +19,7 @@
 #include <signal.h>
 using namespace std;
 
-#define CONFIG_PATH "/etc/sensors"
+#define CONFIG_PATH "/usr/local/etc/sensors/"
 #define CONFIG_FILE "config"
 
 void signal_handler(int signum);
@@ -32,6 +32,7 @@ Sensors& Sensors::instance() {
 
 Sensors::Sensors() : pin (9) {
 	memset(sensors, 0, sizeof(sensors));
+	wiringPiSetup();
 
 	pthread_mutex_init(&mutex, NULL);
 
@@ -44,7 +45,8 @@ Sensors::~Sensors() {
 
 int Sensors::startDaemon() {
 
-	wiringPiSetup();
+	std::cout << "start deamon" << std::endl;
+
 	set_max_priority();
 
 	setupAlarm();

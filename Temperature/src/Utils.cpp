@@ -22,6 +22,8 @@ int Utils::mkpath(std::string s, mode_t mode) {
     std::string dir;
     int mdret;
 
+//    std::cout << "# checking " << s << std::endl;
+
     if(s[s.size()-1]!='/'){
         // force trailing / so we can handle everything in loop
         s+='/';
@@ -31,9 +33,14 @@ int Utils::mkpath(std::string s, mode_t mode) {
         dir=s.substr(0,pos++);
         pre=pos;
         if(dir.size()==0) continue; // if leading / first time is 0 length
+
+//        std::cout << "# creating " << dir << " " ;
+
         if((mdret=mkdir(dir.c_str(),mode)) && errno!=EEXIST){
+//            std::cout << mdret << " " << errno << std::endl ;
             return mdret;
         }
+//        std::cout << mdret << " " << errno << std::endl ;
     }
     return mdret;
 }
