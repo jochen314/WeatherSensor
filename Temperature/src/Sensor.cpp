@@ -45,8 +45,6 @@ Sensor::Sensor(int dataPin) {
 	_message[37] = 0;
 
 	setBits(_message + 24, 0xF, 4);
-
-	id(rand() % 256).batteryOK(true).alarm(false).channel(0).temperature(0).humidity(50);
 }
 
 std::string Sensor::getStatusJson() {
