@@ -93,7 +93,7 @@ void Sensors::load() {
 
 		disableAlarm();
 
-		sensors[next->channel()] = next;
+		sensors[next->channel() - 1] = next;
 
 		enableAlarm();
 	}
@@ -121,7 +121,7 @@ void Sensors::alarm() {
 			sensors[channel]->send();
 
 			if (this->client != NULL) {
-				this->client->sendStatus(channel, "status", sensors[channel]->getStatusJson());
+				this->client->sendStatus(channel + 1, "status", sensors[channel]->getStatusJson());
 			}
 		}
 	}
@@ -140,7 +140,7 @@ int Sensors::update(const UpdateCommand& cmd) {
 
 	if (sensor == NULL) {
 		sensor = new Sensor(pin);
-		sensor->channel(cmd._channel);
+		sensor->channel(cmd._channel + 1);
 		sensors[cmd._channel] = sensor;
 	}
 	if (cmd._fields.test(FieldSet::Field::ID)) {
