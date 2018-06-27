@@ -70,12 +70,12 @@ int Sensors::startDaemon() {
 
 void Sensors::load() {
 
-	for (u_int8_t channel = 0; channel < 3; channel++) {
+	disableAlarm();
+
+	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
 		if (sensors[channel] != NULL) {
-			disableAlarm();
 			delete sensors[channel];
 			sensors[channel] = NULL;
-			enableAlarm();
 		}
 	}
 
@@ -91,12 +91,12 @@ void Sensors::load() {
 
 		next->message(line.c_str());
 
-		disableAlarm();
-
-		sensors[next->channel() - 1] = next;
-
-		enableAlarm();
+		if (next->channel() >= 0 && next->channel() < sizeof(sensors)/sizeof(*sensors)) {
+			sensors[next->channel()] = next;
+		}
 	}
+
+	enableAlarm();
 }
 
 void Sensors::save() {
@@ -107,7 +107,7 @@ void Sensors::save() {
 
 	config << "p" << pin << endl;
 
-	for (u_int8_t channel = 0; channel < 3; channel++) {
+	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
 		if (sensors[channel] != NULL) {
 			config << sensors[channel]->message() << endl;
 		}
@@ -115,9 +115,9 @@ void Sensors::save() {
 }
 
 void Sensors::alarm() {
-	for (u_int8_t channel = 0; channel < 3; channel++) {
+	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
 		if (sensors[channel] != NULL) {
-//			cout << sensors[channel]->message() << endl;
+			cout << sensors[channel]->message() << endl;
 			sensors[channel]->send();
 
 			if (this->client != NULL) {
@@ -140,7 +140,7 @@ int Sensors::update(const UpdateCommand& cmd) {
 
 	if (sensor == NULL) {
 		sensor = new Sensor(pin);
-		sensor->channel(cmd._channel + 1);
+		sensor->channel(cmd._channel);
 		sensors[cmd._channel] = sensor;
 	}
 	if (cmd._fields.test(FieldSet::Field::ID)) {
