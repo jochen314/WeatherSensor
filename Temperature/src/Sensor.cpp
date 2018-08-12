@@ -51,12 +51,12 @@ std::string Sensor::getStatusJson() {
 	std::ostringstream status;
 
 	status << "{"
-			<< "\"channel\" = " << 1 + (int)channel() <<","
-			<< "\"id\" = " << (int)id() <<","
-			<< "\"alarm\" = \"" << (alarm() ? "on": "off") << "\","
-			<< "\"battery\" = \"" << (batteryOK() ? "ok": "bad") <<"\","
-			<< "\"temperature\" = " << temperature() <<","
-			<< "\"humidity\" = " << humidity()
+			<< "\"channel\":" << 1 + (int)channel() <<","
+			<< "\"id\":" << (int)id() <<","
+			<< "\"alarm\":\"" << (alarm() ? "on": "off") << "\","
+			<< "\"battery\":\"" << (batteryOK() ? "ok": "bad") <<"\","
+			<< "\"temperature\":" << temperature() <<","
+			<< "\"humidity\":" << humidity()
 			<< "}";
 
 	return status.str();
