@@ -35,13 +35,16 @@ Sensors::Sensors() : pin (9) {
 	memset(sensors, 0, sizeof(sensors));
 	wiringPiSetup();
 
-	pthread_mutex_init(&mutex, NULL);
+	pthread_mutexattr_init(&mutex_attr);
+	pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&mutex, &mutex_attr);
 
 	load();
 }
 
 Sensors::~Sensors() {
 	pthread_mutex_destroy(&mutex);
+	pthread_mutexattr_destroy(&mutex_attr);
 }
 
 int Sensors::startDaemon() {
@@ -72,6 +75,8 @@ void Sensors::load() {
 
 	disableAlarm();
 
+	pthread_mutex_lock(&mutex);
+
 	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
 		if (sensors[channel] != NULL) {
 			delete sensors[channel];
@@ -96,10 +101,14 @@ void Sensors::load() {
 		}
 	}
 
+	pthread_mutex_unlock(&mutex);
+
 	enableAlarm();
 }
 
 void Sensors::save() {
+	pthread_mutex_lock(&mutex);
+
 	Utils::mkpath(CONFIG_PATH, 0700);
 
 	ofstream config;
@@ -112,9 +121,11 @@ void Sensors::save() {
 			config << sensors[channel]->message() << endl;
 		}
 	}
+	pthread_mutex_unlock(&mutex);
 }
 
 void Sensors::alarm() {
+	pthread_mutex_lock(&mutex);
 	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
 		if (sensors[channel] != NULL) {
 			cout << sensors[channel]->message() << endl;
@@ -125,6 +136,7 @@ void Sensors::alarm() {
 			}
 		}
 	}
+	pthread_mutex_unlock(&mutex);
 }
 
 UpdateCommand* Sensors::update(uint8_t channel) {
@@ -132,9 +144,9 @@ UpdateCommand* Sensors::update(uint8_t channel) {
 }
 
 int Sensors::update(const UpdateCommand& cmd) {
-	pthread_mutex_lock(&mutex);
-
 	disableAlarm();
+
+	pthread_mutex_lock(&mutex);
 
 	Sensor* sensor = sensors[cmd._channel];
 
@@ -159,9 +171,10 @@ int Sensors::update(const UpdateCommand& cmd) {
 		sensor->humidity(cmd._humidity);
 	}
 
-	enableAlarm();
-	pthread_mutex_unlock(&mutex);
 	save();
+	pthread_mutex_unlock(&mutex);
+
+	enableAlarm();
 
 	return 0;
 }

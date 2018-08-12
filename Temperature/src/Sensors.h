@@ -41,6 +41,7 @@ private:
 	void disableAlarm();
 	void enableAlarm();
 
+	pthread_mutexattr_t mutex_attr;
 	pthread_mutex_t mutex;
 
 	MQTTClient* client;
