@@ -55,7 +55,7 @@ DaemonCommand * parseDaemonCommand(std::list<std::string> args) {
 		return new LocalDaemonStartCommand();
 	}
 	if (args.size() != 1) {
-		throw std::invalid_argument("too many arguments");
+		throw std::invalid_argument("Too many arguments");
 	}
 	std::string cmd = args.front();
 
@@ -69,13 +69,13 @@ DaemonCommand * parseDaemonCommand(std::list<std::string> args) {
 	case TokenType::RELOAD:
 		return new RemoteDaemonReloadCommand();
 	default:
-		throw std::invalid_argument("unkown daemon command");
+		throw std::invalid_argument("Unknown daemon command");
 	}
 }
 
 UpdateCommand * parseUpdateCommand(std::list<std::string> args) {
 	if (args.size() == 0) {
-		throw std::invalid_argument("missing channel number");
+		throw std::invalid_argument("Missing channel number");
 	}
 	std::string arg = args.front();
 	args.pop_front();
@@ -88,7 +88,7 @@ UpdateCommand * parseUpdateCommand(std::list<std::string> args) {
 		args.pop_front();
 
 		if (args.size() == 0) {
-			throw std::invalid_argument("property argument missing");
+			throw std::invalid_argument("Property argument missing");
 		}
 
 		arg = args.front();
@@ -112,7 +112,7 @@ UpdateCommand * parseUpdateCommand(std::list<std::string> args) {
 				command->alarm(false);
 				break;
 			default:
-				throw std::invalid_argument("unkown alarm state");
+				throw std::invalid_argument("Unknown alarm state");
 			}
 		}
 			break;
@@ -126,7 +126,7 @@ UpdateCommand * parseUpdateCommand(std::list<std::string> args) {
 				command->batteryOK(true);
 				break;
 			default:
-				throw std::invalid_argument("unkown battery state");
+				throw std::invalid_argument("Unknown battery state");
 			}
 		}
 			break;
@@ -139,7 +139,7 @@ UpdateCommand * parseUpdateCommand(std::list<std::string> args) {
 		}
 			break;
 		default:
-			throw std::invalid_argument("unkown sensor property");
+			throw std::invalid_argument("Unknown sensor property");
 		}
 	}
 
@@ -163,7 +163,7 @@ Command * parseCommand(std::list<std::string> args) {
 	case TokenType::CHANNEL:
 		return parseUpdateCommand(args);
 	default:
-		throw std::invalid_argument("unkown command");
+		throw std::invalid_argument("Unknown command");
 	}
 }
 

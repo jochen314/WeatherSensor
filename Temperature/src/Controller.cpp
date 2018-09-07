@@ -37,28 +37,21 @@ int Controller::serverLoop() {
 	Utils::mkpath(PATH_NAME, 0777);
 
 	unlink(PATH_NAME FIFO_NAME);
-	int ret = mkfifo(PATH_NAME FIFO_NAME, 0777);
-
-//	std::cout << "pipe create " << ret << std::endl;
+	mkfifo(PATH_NAME FIFO_NAME, 0777);
 
 	running = true;
 
 	Buffer in;
 
 	while (running) {
-//		std::cout << "open pipe" << std::endl;
 
 		int fd = ::open(PATH_NAME FIFO_NAME, O_RDONLY);
-
-//		std::cout << "open pipe: " << fd << " " << errno << std::endl;
 
 		if (in.receive(fd)) {
 
 			LocalCommand* cmd = LocalCommand::read(in);
 
 			if (cmd != NULL) {
-
-//				std::cout << "Received command" << std::endl;
 
 				cmd->execute();
 				delete cmd;

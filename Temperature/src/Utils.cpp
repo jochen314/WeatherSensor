@@ -20,7 +20,7 @@ Utils::~Utils() {
 int Utils::mkpath(std::string s, mode_t mode) {
     size_t pre=0,pos;
     std::string dir;
-    int mdret;
+    int mdret = 0;
 
 //    std::cout << "# checking " << s << std::endl;
 

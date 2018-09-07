@@ -36,7 +36,6 @@ Sensors::Sensors() : pin (9) {
 	wiringPiSetup();
 
 	pthread_mutexattr_init(&mutex_attr);
-	pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&mutex, &mutex_attr);
 
 	load();
@@ -49,7 +48,7 @@ Sensors::~Sensors() {
 
 int Sensors::startDaemon() {
 
-	std::cout << "start deamon" << std::endl;
+	std::cout << "start daemon" << std::endl;
 
 	set_max_priority();
 
@@ -61,6 +60,8 @@ int Sensors::startDaemon() {
 	this->client = &mqttClient;
 
 	Controller::instance().serverLoop();
+
+	disableAlarm();
 
 	this->client = NULL;
 
@@ -74,7 +75,6 @@ int Sensors::startDaemon() {
 void Sensors::load() {
 
 	disableAlarm();
-
 	pthread_mutex_lock(&mutex);
 
 	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
@@ -102,7 +102,6 @@ void Sensors::load() {
 	}
 
 	pthread_mutex_unlock(&mutex);
-
 	enableAlarm();
 }
 
@@ -144,8 +143,8 @@ UpdateCommand* Sensors::update(uint8_t channel) {
 }
 
 int Sensors::update(const UpdateCommand& cmd) {
-	disableAlarm();
 
+	disableAlarm();
 	pthread_mutex_lock(&mutex);
 
 	Sensor* sensor = sensors[cmd._channel];
@@ -171,10 +170,10 @@ int Sensors::update(const UpdateCommand& cmd) {
 		sensor->humidity(cmd._humidity);
 	}
 
-	save();
 	pthread_mutex_unlock(&mutex);
-
 	enableAlarm();
+
+	save();
 
 	return 0;
 }

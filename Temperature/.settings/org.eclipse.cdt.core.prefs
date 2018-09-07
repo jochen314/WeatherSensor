@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.277250669/PATH/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.277250669/PATH/operation=replace
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.277250669/PATH/value=D\:\\SysGCC\\raspberry\\bin;C\:\\Windows\\system32;C\:\\Windows;C\:\\Windows\\System32\\Wbem;C\:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C\:\\Windows\\System32\\OpenSSH\\
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.277250669/append=true
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.277250669/appendContributed=true
