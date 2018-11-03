@@ -106,6 +106,7 @@ void Sensors::load() {
 }
 
 void Sensors::save() {
+	disableAlarm();
 	pthread_mutex_lock(&mutex);
 
 	Utils::mkpath(CONFIG_PATH, 0700);
@@ -121,13 +122,13 @@ void Sensors::save() {
 		}
 	}
 	pthread_mutex_unlock(&mutex);
+	enableAlarm();
 }
 
 void Sensors::alarm() {
 	pthread_mutex_lock(&mutex);
 	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
 		if (sensors[channel] != NULL) {
-			cout << sensors[channel]->message() << endl;
 			sensors[channel]->send();
 
 			if (this->client != NULL) {
