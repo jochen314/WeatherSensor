@@ -4,10 +4,12 @@
 #include <stdint.h>
 #include <string>
 #include <wiringPi.h>
+#include <json.hpp>
+using json = nlohmann::json;
 
 class Sensor{
   public:
-    Sensor(int dataPin);
+    Sensor();
 
     Sensor& id(uint8_t id);
     Sensor& alarm(bool flag);
@@ -23,17 +25,15 @@ class Sensor{
     float temperature() const;
     int humidity() const;
 
-    void send() const;
+    void send(int dataPin) const;
 
 	const char* message() const;
 	Sensor& message(const char* message);
-
-	std::string getStatusJson();
-
   private:
-    int _dataPin;
     char _message[37];
 };
 
+void to_json(json& j, const Sensor& s) ;
+void from_json(const json& j, Sensor& s) ;
 
 #endif

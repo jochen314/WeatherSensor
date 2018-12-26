@@ -41,10 +41,14 @@ private:
 	void disableAlarm();
 	void enableAlarm();
 
+	void doSave();
+	void doLoad(json & config );
+	bool doLoadJSON(json & config);
+
 	pthread_mutexattr_t mutex_attr;
 	pthread_mutex_t mutex;
 
-	MQTTClient* client;
+	MQTTClient client;
 };
 
 

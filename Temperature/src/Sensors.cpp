@@ -18,10 +18,13 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <signal.h>
+
 using namespace std;
 
-#define CONFIG_PATH "/usr/local/etc/sensors/"
+
+#define CONFIG_PATH "./"
 #define CONFIG_FILE "config"
+#define JSON_CONFIG_FILE "config.json"
 
 void signal_handler(int signum);
 void set_max_priority();
@@ -54,18 +57,20 @@ int Sensors::startDaemon() {
 
 	setupAlarm();
 
-	MQTTClient mqttClient ("weather_sender");
-	mqttClient.start();
+	client.start();
 
-	this->client = &mqttClient;
+	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
+		if (sensors[channel] != NULL) {
+			json status = *(sensors[channel]);
+			this->client.sendStatus(channel + 1, "status", status.dump());
+		}
+	}
 
-	Controller::instance().serverLoop();
+	//Controller::instance().serverLoop();
 
 	disableAlarm();
 
-	this->client = NULL;
-
-	mqttClient.stop();
+	client.stop();
 
 	save();
 
@@ -84,56 +89,114 @@ void Sensors::load() {
 		}
 	}
 
-	ifstream myfile;
-	myfile.open(CONFIG_PATH CONFIG_FILE);
+	json config;
 
-	string line;
-	while (getline(myfile, line)) {
-		if (line.at(0) == 'p') {
-			pin = std::stoi( line.substr(1));
-		}
-		Sensor* next = new Sensor(pin);
-
-		next->message(line.c_str());
-
-		if (next->channel() >= 0 && next->channel() < sizeof(sensors)/sizeof(*sensors)) {
-			sensors[next->channel()] = next;
-		}
+	if (!doLoadJSON(config)) {
+		doLoad(config);
 	}
+
+	pin = config.value("pin", pin);
+	pinMode(pin, OUTPUT);
+
+	const json::array_t sensorConf = config["sensors"];
+	for (auto it = sensorConf.begin(); it != sensorConf.end(); ++it) {
+		Sensor* s = new Sensor();
+		*s = *it;
+		json j = *s;
+		cout << j.dump(4) << endl;
+		sensors[s->channel()] = s;
+	}
+
+	client = config["mqtt"];
 
 	pthread_mutex_unlock(&mutex);
 	enableAlarm();
 }
 
+void Sensors::doLoad(json & config) {
+	ifstream myfile;
+	myfile.open(CONFIG_PATH CONFIG_FILE);
+
+	config["sensors"] = json::array();
+
+	string line;
+	while (getline(myfile, line)) {
+		if (line.at(0) == 'p') {
+			int pin = std::stoi( line.substr(1));
+			config["pin"] = pin;
+			continue;
+		}
+		Sensor* next = new Sensor();
+
+		next->message(line.c_str());
+
+		if (next->channel() >= 0 && next->channel() < sizeof(sensors)/sizeof(*sensors)) {
+			config["sensors"].push_back(line);
+		}
+	}
+
+	cout << "read old config: " << config << endl;
+}
+
+bool Sensors::doLoadJSON(json & config) {
+	ifstream myfile;
+	myfile.open(CONFIG_PATH JSON_CONFIG_FILE);
+
+	if (myfile.fail()) {
+		return false;
+	}
+
+	myfile >> config;
+
+	cout << "read new config: " << config << endl;
+
+	return true;
+}
+
+
 void Sensors::save() {
 	disableAlarm();
 	pthread_mutex_lock(&mutex);
 
+	doSave();
+
+	pthread_mutex_unlock(&mutex);
+	enableAlarm();
+}
+
+void Sensors::doSave() {
 	Utils::mkpath(CONFIG_PATH, 0700);
 
-	ofstream config;
-	config.open(CONFIG_PATH CONFIG_FILE);
+	ofstream out;
+	out.open(CONFIG_PATH JSON_CONFIG_FILE);
 
-	config << "p" << pin << endl;
+	json config;
+
+	config["pin"] = pin;
+	config["sensors"] = json::array();
 
 	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
 		if (sensors[channel] != NULL) {
-			config << sensors[channel]->message() << endl;
+			json status = *(sensors[channel]);
+			config["sensors"].push_back(status);
 		}
 	}
-	pthread_mutex_unlock(&mutex);
-	enableAlarm();
+
+	config["mqtt"] = client;
+
+	out << config;
+
+	cout << "write new config: " << config << endl;
 }
 
 void Sensors::alarm() {
 	pthread_mutex_lock(&mutex);
 	for (u_int8_t channel = 0; channel < sizeof(sensors)/sizeof(*sensors); channel++) {
 		if (sensors[channel] != NULL) {
-			sensors[channel]->send();
+			sensors[channel]->send(pin);
 
-			if (this->client != NULL) {
-				this->client->sendStatus(channel + 1, "status", sensors[channel]->getStatusJson());
-			}
+			json status = *(sensors[channel]);
+			this->client.sendStatus(channel + 1, "status", status.dump());
 		}
 	}
 	pthread_mutex_unlock(&mutex);
@@ -151,7 +214,7 @@ int Sensors::update(const UpdateCommand& cmd) {
 	Sensor* sensor = sensors[cmd._channel];
 
 	if (sensor == NULL) {
-		sensor = new Sensor(pin);
+		sensor = new Sensor();
 		sensor->channel(cmd._channel);
 		sensors[cmd._channel] = sensor;
 	}
@@ -170,6 +233,9 @@ int Sensors::update(const UpdateCommand& cmd) {
 	if (cmd._fields.test(FieldSet::Field::HUMIDITY)) {
 		sensor->humidity(cmd._humidity);
 	}
+
+	json status = *sensor;
+	this->client.sendStatus(cmd._channel + 1, "status", status.dump());
 
 	pthread_mutex_unlock(&mutex);
 	enableAlarm();

@@ -37,31 +37,12 @@ int getBits(const char *message, int count) {
 	return result;
 }
 
-Sensor::Sensor(int dataPin) {
-	_dataPin = dataPin;
-	pinMode(_dataPin, OUTPUT);
-
+Sensor::Sensor() {
 	memset(_message, '0', 36);
 	_message[37] = 0;
 
 	setBits(_message + 24, 0xF, 4);
 }
-
-std::string Sensor::getStatusJson() {
-	std::ostringstream status;
-
-	status << "{"
-			<< "\"channel\":" << 1 + (int)channel() <<","
-			<< "\"id\":" << (int)id() <<","
-			<< "\"alarm\":\"" << (alarm() ? "on": "off") << "\","
-			<< "\"battery\":\"" << (batteryOK() ? "ok": "bad") <<"\","
-			<< "\"temperature\":" << temperature() <<","
-			<< "\"humidity\":" << humidity()
-			<< "}";
-
-	return status.str();
-}
-
 
 Sensor& Sensor::id(uint8_t id) {
 	setBits(_message, id, 8);
@@ -152,8 +133,52 @@ void sendMessage(int dataPin, const char *message) {
 	digitalWrite(dataPin, LOW);
 }
 
-void Sensor::send() const {
+void Sensor::send(int dataPin) const {
 	for (int i = 0; i < 12; i++) {
-		sendMessage(_dataPin, _message);
+		sendMessage(dataPin, _message);
+	}
+}
+
+void to_json(json& j, const Sensor& s) {
+	j = json { { "channel", 1 + s.channel() }, { "id", s.id() }, { "alarm",
+			s.alarm() }, { "battery", s.batteryOK() }, { "temperature",
+			s.temperature() }, { "humidity", s.humidity() } };
+}
+
+void from_json(const json& j, Sensor& s) {
+
+	switch (j.type()) {
+	case json::value_t::string:
+		s.message(j.get<std::string>().c_str());
+		break;
+	case json::value_t::object: {
+		auto it = j.find("channel");
+		if (it != j.end()) {
+			s.channel(it->get<int>() - 1);
+		}
+		it = j.find("id");
+		if (it != j.end()) {
+			s.id(it->get<int>());
+		}
+		it = j.find("alarm");
+		if (it != j.end()) {
+			s.alarm(it->get<bool>());
+		}
+		it = j.find("battery");
+		if (it != j.end()) {
+			s.batteryOK(it->get<int>());
+		}
+		it = j.find("temperature");
+		if (it != j.end()) {
+			s.temperature(it->get<int>());
+		}
+		it = j.find("humidity");
+		if (it != j.end()) {
+			s.humidity(it->get<int>());
+		}
+	}
+		break;
+	default:
+		break;
 	}
 }
