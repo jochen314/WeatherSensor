@@ -102,7 +102,10 @@ uint8_t Sensor::channel() const {
 }
 
 float Sensor::temperature() const {
-	int temp = getBits(_message + 12, 12);
+	int16_t temp = getBits(_message + 12, 12);
+	if (temp & (1 << 11)) {
+		temp |= 0xf000;
+	}
 
 	return (float) temp / 10;
 }
