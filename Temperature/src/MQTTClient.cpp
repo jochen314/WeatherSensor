@@ -26,7 +26,7 @@ int MQTTClient::sendStatus(int channel, std::string subTopic,
 		std::string status) {
 	return publish(NULL,
 			("status/" + topic + "/" + std::to_string(channel) + "/" + subTopic).c_str(),
-			status.length(), status.c_str(), 0, false);
+			status.length(), status.c_str(), 0, true);
 }
 
 int MQTTClient::start() {
